@@ -95,7 +95,6 @@ CREATE TABLE productos (
                            activo BOOLEAN DEFAULT true,
                            categoria_id BIGINT,
                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                            FOREIGN KEY (tienda_id) REFERENCES tiendas(id) ON DELETE CASCADE,
                            FOREIGN KEY (categoria_id) REFERENCES categorias(id) ON DELETE SET NULL
@@ -166,8 +165,6 @@ CREATE TABLE abonos (
                         metodo_pago metodo_pago DEFAULT 'EFECTIVO',
                         observaciones TEXT,
                         estado estado_abono DEFAULT 'APLICADO',
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
                         FOREIGN KEY (tienda_id) REFERENCES tiendas(id) ON DELETE CASCADE,
                         FOREIGN KEY (cuenta_cliente_id) REFERENCES cuentas_cliente(id) ON DELETE CASCADE
