@@ -60,7 +60,6 @@ CREATE TABLE usuarios_roles (
                                 FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE
 );
 
-
 CREATE TABLE empleados_tienda (
                                   id BIGSERIAL PRIMARY KEY,
                                   usuario_id BIGINT NOT NULL,
@@ -82,7 +81,6 @@ CREATE TABLE categorias (
                             UNIQUE(tienda_id, nombre),
                             FOREIGN KEY (tienda_id) REFERENCES tiendas(id) ON DELETE CASCADE
 );
-
 
 CREATE TABLE productos (
                            id BIGSERIAL PRIMARY KEY,
