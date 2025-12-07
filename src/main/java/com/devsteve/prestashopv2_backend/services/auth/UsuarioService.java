@@ -289,6 +289,50 @@ public class UsuarioService {
             .collect(java.util.stream.Collectors.toList());
     }
 
+    @Transactional
+    public UsuarioResponse registrarClienteExistentePorEmail(Long tiendaId, String emailCliente) {
+        // Obtener encargado autenticado
+        String emailEncargado = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity encargado = usuarioRepository.findByEmailWithRolesAndTiendas(emailEncargado)
+            .orElseThrow(() -> new RuntimeException("Encargado autenticado no encontrado"));
+
+        // Validar que sea encargado de la tienda específica
+        validarAccesoATienda(encargado, tiendaId);
+
+        // Buscar el cliente por email
+        UsuarioEntity cliente = usuarioRepository.findByEmailWithRolesAndTiendas(emailCliente)
+            .orElseThrow(() -> new RuntimeException("Cliente no encontrado con email: " + emailCliente));
+
+        // Verificar que la tienda existe
+        TiendaEntity tienda = tiendaRepository.findById(tiendaId)
+            .orElseThrow(() -> new RuntimeException("Tienda no encontrada"));
+
+        // Verificar que el cliente no esté ya registrado en esta tienda
+        boolean yaRegistrado = cliente.getCuentasCliente().stream()
+            .anyMatch(cc -> cc.getTienda().getId().equals(tiendaId));
+
+        if (yaRegistrado) {
+            throw new RuntimeException("El cliente ya está registrado en esta tienda");
+        }
+
+        // Crear cuenta de cliente en la nueva tienda
+        CuentaClienteEntity nuevaCuenta = CuentaClienteEntity.builder()
+            .usuario(cliente)
+            .tienda(tienda)
+            .activa(true)
+            .build();
+        cuentaClienteRepository.save(nuevaCuenta);
+
+        // Recargar cliente con relaciones actualizadas
+        cliente = usuarioRepository.findByEmailWithRolesAndTiendas(emailCliente)
+            .orElseThrow(() -> new RuntimeException("Error al recargar cliente"));
+
+        log.info("Encargado {} registró cliente {} en tienda: {}",
+                emailEncargado, emailCliente, tienda.getNombre());
+
+        return usuarioMapper.toResponse(cliente);
+    }
+
     private void validarPermisosCreacion(UsuarioEntity solicitante, Long tiendaId, String rol) {
         boolean esAdmin = solicitante.getRoles().stream()
             .anyMatch(r -> "SYSADMIN".equals(r.getNombre()));

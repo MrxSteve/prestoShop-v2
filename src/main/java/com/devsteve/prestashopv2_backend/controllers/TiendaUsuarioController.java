@@ -102,4 +102,14 @@ public class TiendaUsuarioController {
         usuarioService.desactivarUsuario(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{tiendaId}/registrar-cliente-existente")
+    @Operation(summary = "Registrar cliente existente", description = "Registrar un usuario existente como cliente en mi tienda")
+    @PreAuthorize("hasRole('ENCARGADO')")
+    public ResponseEntity<UsuarioResponse> registrarClienteExistente(
+            @PathVariable Long tiendaId,
+            @RequestParam String emailCliente) {
+        UsuarioResponse response = usuarioService.registrarClienteExistentePorEmail(tiendaId, emailCliente);
+        return ResponseEntity.ok(response);
+    }
 }

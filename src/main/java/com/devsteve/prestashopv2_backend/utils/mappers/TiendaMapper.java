@@ -1,15 +1,18 @@
 package com.devsteve.prestashopv2_backend.utils.mappers;
 
+import com.devsteve.prestashopv2_backend.models.dto.request.CrearTiendaRequest;
+import com.devsteve.prestashopv2_backend.models.dto.request.update.UpdateTiendaRequest;
+import com.devsteve.prestashopv2_backend.models.dto.response.TiendaResponse;
 import com.devsteve.prestashopv2_backend.models.entities.SolicitudTiendaEntity;
 import com.devsteve.prestashopv2_backend.models.entities.TiendaEntity;
 import com.devsteve.prestashopv2_backend.models.entities.UsuarioEntity;
 import org.mapstruct.*;
 
-@Mapper(
-    componentModel = "spring",
-    nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-    unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+import java.util.List;
+
+@Mapper(componentModel = "spring",
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface TiendaMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -48,4 +51,19 @@ public interface TiendaMapper {
     @Mapping(target = "movimientosComoCliente", ignore = true)
     @Mapping(target = "notificaciones", ignore = true)
     UsuarioEntity fromSolicitudToEncargado(SolicitudTiendaEntity solicitud);
+
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "activo", ignore = true)
+    @Mapping(target = "municipio", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    TiendaEntity toEntity(CrearTiendaRequest request);
+
+    @Mapping(target = "municipio.departamento.id", source = "municipio.departamento.id")
+    @Mapping(target = "municipio.departamento.nombre", source = "municipio.departamento.nombre")
+    TiendaResponse toResponse(TiendaEntity tienda);
+
+    void updateEntityFromRequest(UpdateTiendaRequest request, @MappingTarget TiendaEntity tienda);
+
+    List<TiendaResponse> toResponseList(List<TiendaEntity> tiendas);
 }
