@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Información sobre tu solicitud</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            color: white;
+            padding: 25px;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 30px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .info-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .reason-box {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .reason-title {
+            font-weight: bold;
+            color: #721c24;
+            margin-bottom: 10px;
+        }
+        .info-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .help-box {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .btn {
+            display: inline-block;
+            background: #17a2b8;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .steps {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="info-icon">📋</div>
+            <h1>Información sobre tu solicitud</h1>
+            <p>Tienda "<span th:text="${nombreTienda}">Nombre de la Tienda</span>"</p>
+        </div>
+
+        <p>Estimado/a <strong th:text="${nombreEncargado}">Nombre del Encargado</strong>,</p>
+
+        <p>Hemos revisado cuidadosamente tu solicitud para crear la tienda <strong th:text="${nombreTienda}">Nombre de la Tienda</strong>.</p>
+
+        <div class="reason-box">
+            <div class="reason-title">📝 Motivo de la decisión:</div>
+            <p th:text="${motivoRechazo}">Motivo específico del rechazo</p>
+        </div>
+
+        <div th:if="${observaciones}" class="info-section">
+            <div class="info-title">💬 Observaciones adicionales:</div>
+            <p th:text="${observaciones}">Observaciones del administrador</p>
+        </div>
+
+        <div class="help-box">
+            <h3>💡 ¿Qué puedes hacer ahora?</h3>
+            <p>No te desanimes, esta es solo información para ayudarte a mejorar tu solicitud:</p>
+        </div>
+
+        <div class="steps">
+            <h4>🔄 Pasos para reenviar tu solicitud:</h4>
+            <ol>
+                <li><strong>Revisa el motivo</strong> mencionado arriba</li>
+                <li><strong>Prepara la documentación</strong> o información requerida</li>
+                <li><strong>Envía una nueva solicitud</strong> con las correcciones necesarias</li>
+                <li><strong>Incluye una nota</strong> mencionando que es una resubmisión</li>
+            </ol>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="btn">Enviar Nueva Solicitud</a>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">📞 ¿Necesitas ayuda o aclaración?</div>
+            <p>Nuestro equipo de soporte está disponible para ayudarte:</p>
+            <ul>
+                <li>📧 <strong>Email:</strong> <span th:text="${emailSoporte}">soporte@shopmoney.com</span></li>
+                <li>📱 <strong>WhatsApp:</strong> +503 1234-5678</li>
+                <li>🕒 <strong>Horario:</strong> Lunes a Viernes 8:00 AM - 6:00 PM</li>
+            </ul>
+            <p><em>Menciona que tu consulta es sobre la solicitud de tienda rechazada.</em></p>
+        </div>
+
+        <div class="help-box">
+            <h4>📋 Documentos comúnmente requeridos:</h4>
+            <ul>
+                <li>✅ DUI del encargado (copia legible)</li>
+                <li>✅ Constancia de dirección del negocio</li>
+                <li>✅ Fotografías del local o negocio</li>
+                <li>✅ Referencias comerciales o personales</li>
+                <li>✅ Descripción detallada del tipo de productos que vendes</li>
+            </ul>
+        </div>
+
+        <p><strong>Recuerda:</strong> Estamos aquí para apoyar el crecimiento de tu negocio. Este proceso nos ayuda a garantizar la mejor experiencia para todos nuestros usuarios.</p>
+
+        <div class="footer">
+            <p><strong>Equipo de ShopMoney</strong></p>
+            <p>Tu socio en el crecimiento de tu negocio</p>
+            <p><em>Este es un mensaje automático, pero nuestro soporte está disponible para cualquier consulta.</em></p>
+        </div>
+    </div>
+</body>
+</html>

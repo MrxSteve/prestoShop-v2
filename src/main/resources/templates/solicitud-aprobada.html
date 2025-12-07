@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Solicitud Aprobada!</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 25px;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 30px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .credentials-box {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .credential-item {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .credential-label {
+            font-weight: bold;
+            color: #155724;
+        }
+        .credential-value {
+            font-family: 'Courier New', monospace;
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .info-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .info-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .btn {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">🎉</div>
+            <h1>¡Solicitud Aprobada!</h1>
+            <p>Tu tienda está lista para comenzar</p>
+        </div>
+
+        <p>Estimado/a <strong th:text="${nombreEncargado}">Nombre del Encargado</strong>,</p>
+
+        <p>¡Excelentes noticias! Tu solicitud para crear la tienda <strong th:text="${nombreTienda}">Nombre de la Tienda</strong> ha sido <strong>APROBADA</strong>.</p>
+
+        <div th:if="${mensajeBienvenida}" class="info-section">
+            <div class="info-title">Mensaje del Administrador:</div>
+            <p th:text="${mensajeBienvenida}">Mensaje de bienvenida personalizado</p>
+        </div>
+
+        <div class="credentials-box">
+            <h3>🔐 Credenciales de Acceso</h3>
+            <div class="credential-item">
+                <span class="credential-label">Email:</span>
+                <span class="credential-value" th:text="${emailEncargado}">email@ejemplo.com</span>
+            </div>
+            <div class="credential-item">
+                <span class="credential-label">Contraseña Temporal:</span>
+                <span class="credential-value" th:text="${passwordTemporal}">TMP_abc123</span>
+            </div>
+        </div>
+
+        <div class="warning-box">
+            <strong>⚠️ Importante:</strong> Por seguridad, debes cambiar tu contraseña en el primer inicio de sesión.
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">📍 Información de tu Tienda:</div>
+            <p><strong>Nombre:</strong> <span th:text="${nombreTienda}">Nombre de la Tienda</span></p>
+            <p><strong>Teléfono:</strong> <span th:text="${telefonoTienda}">Teléfono</span></p>
+            <p><strong>Ubicación:</strong> <span th:text="${direccionTienda}">Dirección</span>, <span th:text="${municipio}">Municipio</span>, <span th:text="${departamento}">Departamento</span></p>
+            <div th:if="${limiteCreditoInicial != null && limiteCreditoInicial > 0}">
+                <p><strong>Límite de Crédito Inicial:</strong> $<span th:text="${#numbers.formatDecimal(limiteCreditoInicial, 0, 2)}">0.00</span></p>
+            </div>
+        </div>
+
+        <div th:if="${observaciones}" class="info-section">
+            <div class="info-title">📝 Observaciones:</div>
+            <p th:text="${observaciones}">Observaciones adicionales del administrador</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="btn">Iniciar Sesión en el Sistema</a>
+        </div>
+
+        <h3>🚀 Próximos Pasos:</h3>
+        <ol>
+            <li>Inicia sesión con las credenciales proporcionadas</li>
+            <li>Cambia tu contraseña por una segura</li>
+            <li>Configura tu perfil y el de tu tienda</li>
+            <li>Comienza a registrar tus productos</li>
+            <li>Invita a tus empleados al sistema</li>
+            <li>¡Empieza a gestionar tus ventas!</li>
+        </ol>
+
+        <p><strong>¿Necesitas ayuda?</strong> No dudes en contactarnos:</p>
+        <ul>
+            <li>📧 Email: soporte@shopmoney.com</li>
+            <li>📱 WhatsApp: +503 1234-5678</li>
+            <li>🕒 Horario: Lunes a Viernes 8:00 AM - 6:00 PM</li>
+        </ul>
+
+        <div class="footer">
+            <p><strong>¡Bienvenido a ShopMoney!</strong></p>
+            <p>Tu socio en el crecimiento de tu negocio</p>
+        </div>
+    </div>
+</body>
+</html>

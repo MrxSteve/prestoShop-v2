@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud Recibida</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 25px;
+            border-radius: 10px 10px 0 0;
+            margin: -30px -30px 30px -30px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .check-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .info-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .details-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .details-title {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        .timeline {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .reference-number {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1976d2;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="check-icon">✅</div>
+            <h1>¡Solicitud Recibida!</h1>
+            <p>Hemos recibido tu solicitud correctamente</p>
+        </div>
+
+        <p>Estimado/a <strong th:text="${nombreEncargado}">Nombre del Encargado</strong>,</p>
+
+        <div class="info-box">
+            <h3>🎉 ¡Gracias por tu interés en ShopMoney!</h3>
+            <p>Hemos recibido tu solicitud para crear la tienda <strong th:text="${nombreTienda}">Nombre de la Tienda</strong> y está siendo procesada por nuestro equipo.</p>
+        </div>
+
+        <div class="reference-number">
+            <div>📄 Número de Referencia</div>
+            <div style="font-size: 18px; margin-top: 5px;">
+                #<span th:text="${numeroSolicitud}">00001</span>
+            </div>
+        </div>
+
+        <div class="details-section">
+            <div class="details-title">📋 Detalles de tu solicitud:</div>
+            <p><strong>Tienda:</strong> <span th:text="${nombreTienda}">Nombre de la Tienda</span></p>
+            <p><strong>Encargado:</strong> <span th:text="${nombreEncargado}">Nombre del Encargado</span></p>
+            <p><strong>Fecha de solicitud:</strong> <span th:text="${#temporals.format(fechaSolicitud, 'dd/MM/yyyy HH:mm')}">01/01/2024 12:00</span></p>
+            <p><strong>Estado:</strong> <span style="color: #ffc107; font-weight: bold;">⏳ En revisión</span></p>
+        </div>
+
+        <div class="timeline">
+            <h4>⏰ ¿Qué sigue ahora?</h4>
+            <ol>
+                <li><strong>Revisión inicial</strong> - Validamos que la información esté completa (24-48 horas)</li>
+                <li><strong>Evaluación detallada</strong> - Nuestro equipo revisa tu solicitud (2-5 días hábiles)</li>
+                <li><strong>Decisión final</strong> - Te contactaremos con el resultado</li>
+                <li><strong>Si es aprobada</strong> - Recibirás las credenciales de acceso inmediatamente</li>
+            </ol>
+        </div>
+
+        <div class="details-section">
+            <div class="details-title">📞 Información de Contacto</div>
+            <p>Si tienes preguntas sobre tu solicitud, no dudes en contactarnos:</p>
+            <ul>
+                <li>📧 <strong>Email:</strong> <span th:text="${emailSoporte}">soporte@shopmoney.com</span></li>
+                <li>📱 <strong>WhatsApp:</strong> +503 1234-5678</li>
+                <li>🕒 <strong>Horario:</strong> Lunes a Viernes 8:00 AM - 6:00 PM</li>
+            </ul>
+            <p><em>Menciona tu número de referencia: #<span th:text="${numeroSolicitud}">00001</span></em></p>
+        </div>
+
+        <div class="info-box">
+            <h4>💡 Mientras esperas...</h4>
+            <p>Te recomendamos:</p>
+            <ul>
+                <li>✅ Prepara la información de tus productos</li>
+                <li>✅ Piensa en los empleados que invitarás al sistema</li>
+                <li>✅ Define tus políticas de crédito para clientes</li>
+                <li>✅ Organiza tu inventario actual</li>
+            </ul>
+        </div>
+
+        <div style="background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p><strong>🔔 Te mantendremos informado:</strong></p>
+            <p>Recibirás un email cuando hayamos terminado de revisar tu solicitud. Normalmente respondemos en 2-5 días hábiles.</p>
+        </div>
+
+        <div class="footer">
+            <p><strong>Equipo de ShopMoney</strong></p>
+            <p>Tu socio en el crecimiento de tu negocio</p>
+            <p><em>Este es un email automático de confirmación.</em></p>
+        </div>
+    </div>
+</body>
+</html>
