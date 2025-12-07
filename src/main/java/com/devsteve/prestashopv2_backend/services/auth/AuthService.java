@@ -4,14 +4,17 @@ import com.devsteve.prestashopv2_backend.models.dto.request.ChangePasswordReques
 import com.devsteve.prestashopv2_backend.models.dto.request.LoginRequest;
 import com.devsteve.prestashopv2_backend.models.dto.request.RegistroUsuarioRequest;
 import com.devsteve.prestashopv2_backend.models.dto.request.SolicitudTiendaRequest;
+import com.devsteve.prestashopv2_backend.models.dto.request.update.UpdateUsuarioRequest;
 import com.devsteve.prestashopv2_backend.models.dto.response.AuthResponse;
 import com.devsteve.prestashopv2_backend.models.dto.response.SolicitudTiendaResponse;
+import com.devsteve.prestashopv2_backend.models.dto.response.UsuarioResponse;
 import com.devsteve.prestashopv2_backend.models.entities.*;
 import com.devsteve.prestashopv2_backend.repositories.*;
 import com.devsteve.prestashopv2_backend.security.JwtService;
 import com.devsteve.prestashopv2_backend.services.email.SolicitudTiendaEmailService;
 import com.devsteve.prestashopv2_backend.utils.mappers.AuthMapper;
 import com.devsteve.prestashopv2_backend.utils.mappers.SolicitudTiendaMapper;
+import com.devsteve.prestashopv2_backend.utils.mappers.UsuarioMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,6 +42,7 @@ public class AuthService {
 
     private final AuthMapper authMapper;
     private final SolicitudTiendaMapper solicitudTiendaMapper;
+    private final UsuarioMapper usuarioMapper;
 
     private final SolicitudTiendaEmailService emailService;
 
@@ -177,6 +181,37 @@ public class AuthService {
         log.info("Contraseña cambiada exitosamente para usuario: {}", email);
 
         return buildAuthResponse(usuario, token);
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse obtenerMiPerfil() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return usuarioMapper.toResponse(usuario);
+    }
+
+    @Transactional
+    public UsuarioResponse actualizarMiPerfil(UpdateUsuarioRequest request) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validar email único si se está cambiando
+        if (request.getEmail() != null && !request.getEmail().equals(usuario.getEmail())) {
+            if (usuarioRepository.findByEmail(request.getEmail()).isPresent()) {
+                throw new RuntimeException("Ya existe un usuario con este email");
+            }
+        }
+
+        // Usar el mapper de usuario para actualizar
+        usuarioMapper.updateEntityFromRequest(request, usuario);
+        usuario = usuarioRepository.save(usuario);
+
+        log.info("Perfil actualizado: {}", usuario.getEmail());
+
+        return usuarioMapper.toResponse(usuario);
     }
 
     private AuthResponse buildAuthResponse(UsuarioEntity usuario, String token) {
