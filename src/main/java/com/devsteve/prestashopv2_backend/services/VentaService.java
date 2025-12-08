@@ -51,7 +51,7 @@ public class VentaService {
         TiendaEntity tienda = obtenerTiendaDelEmpleado(solicitante);
 
         // Primero calcular totales basado en los productos y cantidades
-        BigDecimal totalCalculado = calcularTotalVenta(request.getDetalles(), tienda.getId());
+        BigDecimal totalCalculado = calcularTotalVenta(request.getDetalleVentas(), tienda.getId());
 
         // Determinar el tipo de venta y procesar según corresponda
         if (request.getTipoVenta() == TipoVenta.CREDITO) {
@@ -90,16 +90,11 @@ public class VentaService {
         VentaEntity ventaGuardada = ventaRepository.save(venta);
 
         // Procesar detalles de venta
-        procesarDetallesVenta(ventaGuardada, request.getDetalles(), tienda.getId());
-
-        // Cargar el monto a la cuenta del cliente
-        cuentaClienteService.cargarSaldo(cuenta.getId(), totalCalculado, "Venta #" + ventaGuardada.getId());
+        procesarDetallesVenta(ventaGuardada, request.getDetalleVentas());
 
         // FACTURA POR CORREO (VENTA A CRÉDITO)
         ventaEmailService.enviarFacturaVenta(ventaGuardada);
 
-        log.info("Venta a crédito creada #{} por {} en tienda {}",
-                ventaGuardada.getId(), SecurityContextHolder.getContext().getAuthentication().getName(), tienda.getNombre());
 
         return ventaMapper.toResponse(ventaGuardada);
     }
@@ -132,15 +127,13 @@ public class VentaService {
         VentaEntity ventaGuardada = ventaRepository.save(venta);
 
         // Procesar detalles de venta
-        procesarDetallesVenta(ventaGuardada, request.getDetalles(), tienda.getId());
+        procesarDetallesVenta(ventaGuardada, request.getDetalleVentas());
 
         // FACTURA POR CORREO (VENTA DE CONTADO - SOLO SI TIENE CUENTA)
         if (cuenta != null) { // Solo enviar correo si el cliente tiene cuenta registrada
             ventaEmailService.enviarFacturaVenta(ventaGuardada);
         }
 
-        log.info("Venta al contado creada #{} por {} en tienda {}",
-                ventaGuardada.getId(), SecurityContextHolder.getContext().getAuthentication().getName(), tienda.getNombre());
 
         return ventaMapper.toResponse(ventaGuardada);
     }
@@ -217,23 +210,20 @@ public class VentaService {
         return venta;
     }
 
-    private void procesarDetallesVenta(VentaEntity venta, List<DetalleVentaRequest> detallesRequest, Long tiendaId) {
+    private void procesarDetallesVenta(VentaEntity venta, List<DetalleVentaRequest> detallesRequest) {
         List<DetalleVentaEntity> detalles = new ArrayList<>();
         BigDecimal subtotalVenta = BigDecimal.ZERO;
 
         for (DetalleVentaRequest detalleRequest : detallesRequest) {
-            // Verificar que el producto existe y pertenece a la tienda
-            ProductoEntity producto = productoRepository.findByIdAndTiendaId(detalleRequest.getProductoId(), tiendaId)
-                    .orElseThrow(() -> new RuntimeException("Producto no encontrado en esta tienda con ID: " + detalleRequest.getProductoId()));
-
-            // Verificar que el producto esté activo
-            if (!producto.getActivo()) {
-                throw new RuntimeException("El producto " + producto.getNombre() + " no está disponible");
-            }
+            // Verificar que el producto existe
+            ProductoEntity producto = productoRepository.findById(detalleRequest.getProductoId())
+                    .orElseThrow(() -> new RuntimeException("Producto no encontrado con ID: " + detalleRequest.getProductoId()));
 
             DetalleVentaEntity detalle = detalleVentaMapper.toEntity(detalleRequest);
             detalle.setVenta(venta);
             detalle.setProducto(producto);
+
+            // Establecer el precio unitario del producto automáticamente
             detalle.setPrecioUnitario(producto.getPrecioUnitario());
             detalle.setCantidad(detalleRequest.getCantidad());
 
@@ -245,14 +235,18 @@ public class VentaService {
             detalles.add(detalle);
         }
 
-        // Guardar todos los detalles
+        // Guardar todos los detalles en la base de datos para que obtengan sus IDs
+        List<DetalleVentaEntity> detallesGuardados = new ArrayList<>();
         for (DetalleVentaEntity detalle : detalles) {
-            detalleVentaRepository.save(detalle);
+            DetalleVentaEntity detalleGuardado = detalleVentaRepository.save(detalle);
+            detallesGuardados.add(detalleGuardado);
         }
 
-        // Actualizar la venta con el subtotal calculado
+        // Actualizar la venta con los detalles guardados (que ya tienen IDs)
+        venta.setDetalleVentas(detallesGuardados);
         venta.setSubtotal(subtotalVenta);
-        venta.setTotal(subtotalVenta);
+
+        // Guardar la venta actualizada con los detalles
         ventaRepository.save(venta);
     }
 
@@ -310,6 +304,195 @@ public class VentaService {
 
         if (!tieneAcceso) {
             throw new RuntimeException("Sin acceso a esta tienda");
+        }
+    }
+
+    // NUEVOS MÉTODOS PARA CLIENTES
+
+    @Transactional(readOnly = true)
+    public List<VentaResponse> listarMisCompras() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<VentaEntity> ventas = ventaRepository.findByCuentaClienteUsuarioIdOrderByFechaVentaDesc(usuario.getId());
+        return ventaMapper.toResponseList(ventas);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VentaResponse> listarMisComprasPorEstado(EstadoVenta estado) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<VentaEntity> ventas = ventaRepository.findByCuentaClienteUsuarioIdAndEstadoOrderByFechaVentaDesc(usuario.getId(), estado);
+        return ventaMapper.toResponseList(ventas);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<VentaResponse> obtenerDetalleCompra(Long ventaId) {
+        VentaEntity venta = buscarEntidadPorId(ventaId);
+        validarPropietarioVenta(venta);
+        return Optional.of(ventaMapper.toResponse(venta));
+    }
+
+    @Transactional(readOnly = true)
+    public List<VentaResponse> listarMisComprasPorTienda(Long tiendaId) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<VentaEntity> ventas = ventaRepository.findByCuentaClienteUsuarioIdAndTiendaIdOrderByFechaVentaDesc(usuario.getId(), tiendaId);
+        return ventaMapper.toResponseList(ventas);
+    }
+
+    @Transactional
+    public VentaResponse marcarComoPagada(Long ventaId) {
+        VentaEntity venta = buscarEntidadPorId(ventaId);
+        validarAccesoPagoVenta(venta);
+
+        if (venta.getEstado() != EstadoVenta.PENDIENTE && venta.getEstado() != EstadoVenta.PARCIAL) {
+            throw new RuntimeException("Solo se pueden marcar como pagadas las ventas en estado PENDIENTE o PARCIAL");
+        }
+
+        // Si es venta a crédito, abonar el saldo de la cuenta
+        if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCuentaCliente() != null) {
+            cuentaClienteService.abonarSaldo(venta.getCuentaCliente().getId(),
+                    venta.getTotal(), "Pago venta #" + venta.getId());
+        }
+
+        venta.setEstado(EstadoVenta.PAGADA);
+        VentaEntity ventaActualizada = ventaRepository.save(venta);
+
+        log.info("Venta #{} marcada como PAGADA por {}", ventaId, SecurityContextHolder.getContext().getAuthentication().getName());
+
+        return ventaMapper.toResponse(ventaActualizada);
+    }
+
+    @Transactional
+    public List<VentaResponse> marcarTodasMisVentasComoPagadas() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        List<VentaEntity> ventasPendientes = ventaRepository.findByCuentaClienteUsuarioIdAndEstadoInOrderByFechaVentaDesc(
+                usuario.getId(), List.of(EstadoVenta.PENDIENTE, EstadoVenta.PARCIAL));
+
+        if (ventasPendientes.isEmpty()) {
+            return List.of();
+        }
+
+        List<VentaEntity> ventasActualizadas = new ArrayList<>();
+        BigDecimal totalAbonado = BigDecimal.ZERO;
+
+        for (VentaEntity venta : ventasPendientes) {
+            if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCuentaCliente() != null) {
+                totalAbonado = totalAbonado.add(venta.getTotal());
+            }
+
+            venta.setEstado(EstadoVenta.PAGADA);
+            VentaEntity ventaActualizada = ventaRepository.save(venta);
+            ventasActualizadas.add(ventaActualizada);
+        }
+
+        // Si hay ventas a crédito, hacer un solo abono por el total
+        if (totalAbonado.compareTo(BigDecimal.ZERO) > 0 && !ventasPendientes.isEmpty()) {
+            VentaEntity primeraVenta = ventasPendientes.get(0);
+            if (primeraVenta.getCuentaCliente() != null) {
+                cuentaClienteService.abonarSaldo(primeraVenta.getCuentaCliente().getId(),
+                        totalAbonado, "Pago masivo de " + ventasPendientes.size() + " ventas");
+            }
+        }
+
+        log.info("Usuario {} marcó {} ventas como PAGADAS por un total de ${}", email, ventasActualizadas.size(), totalAbonado);
+
+        return ventaMapper.toResponseList(ventasActualizadas);
+    }
+
+    @Transactional
+    public List<VentaResponse> marcarTodasVentasClienteComoPagadas(Long clienteId) {
+        // Validar que el empleado tenga acceso (debe validar que es de la misma tienda)
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity empleado = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+        // Buscar todas las ventas pendientes y parciales del cliente
+        List<VentaEntity> ventasPendientes = ventaRepository.findByCuentaClienteUsuarioIdAndEstadoInOrderByFechaVentaDesc(
+                clienteId, List.of(EstadoVenta.PENDIENTE, EstadoVenta.PARCIAL));
+
+        if (ventasPendientes.isEmpty()) {
+            return List.of();
+        }
+
+        // Validar que el empleado tenga acceso a las tiendas donde están las ventas
+        TiendaEntity tiendaEmpleado = obtenerTiendaDelEmpleado(empleado);
+        boolean todasVentasSonDeLaTienda = ventasPendientes.stream()
+                .allMatch(v -> v.getTienda().getId().equals(tiendaEmpleado.getId()));
+
+        if (!todasVentasSonDeLaTienda) {
+            throw new RuntimeException("No puedes marcar como pagadas ventas de otras tiendas");
+        }
+
+        List<VentaEntity> ventasActualizadas = new ArrayList<>();
+
+        // Solo marcar como pagadas, sin hacer abonos a la cuenta
+        for (VentaEntity venta : ventasPendientes) {
+            venta.setEstado(EstadoVenta.PAGADA);
+            VentaEntity ventaActualizada = ventaRepository.save(venta);
+            ventasActualizadas.add(ventaActualizada);
+        }
+
+        log.info("Empleado {} marcó {} ventas del cliente {} como PAGADAS (sin abonos automáticos)",
+                email, ventasActualizadas.size(), clienteId);
+
+        return ventaMapper.toResponseList(ventasActualizadas);
+    }
+
+    // MÉTODOS AUXILIARES PARA NUEVAS FUNCIONALIDADES
+
+    private void validarPropietarioVenta(VentaEntity venta) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+        boolean esAdmin = usuario.getRoles().stream()
+                .anyMatch(r -> "SYSADMIN".equals(r.getNombre()));
+
+        if (esAdmin) {
+            return;
+        }
+
+        boolean esPropietario = venta.getCuentaCliente() != null &&
+                venta.getCuentaCliente().getUsuario().getId().equals(usuario.getId());
+
+        boolean esEmpleadoTienda = usuario.getEmpleadoTiendas().stream()
+                .anyMatch(et -> et.getTienda().getId().equals(venta.getTienda().getId()) && et.getActivo());
+
+        if (!esPropietario && !esEmpleadoTienda) {
+            throw new RuntimeException("No tienes permisos para acceder a esta venta");
+        }
+    }
+
+    private void validarAccesoPagoVenta(VentaEntity venta) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity usuario = usuarioRepository.findByEmailWithRolesAndTiendas(email)
+                .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+        boolean esAdmin = usuario.getRoles().stream()
+                .anyMatch(r -> "SYSADMIN".equals(r.getNombre()));
+
+        if (esAdmin) {
+            return;
+        }
+
+        boolean esPropietario = venta.getCuentaCliente() != null &&
+                venta.getCuentaCliente().getUsuario().getId().equals(usuario.getId());
+
+        boolean esEmpleadoTienda = usuario.getEmpleadoTiendas().stream()
+                .anyMatch(et -> et.getTienda().getId().equals(venta.getTienda().getId()) && et.getActivo());
+
+        if (!esPropietario && !esEmpleadoTienda) {
+            throw new RuntimeException("No tienes permisos para marcar esta venta como pagada");
         }
     }
 }

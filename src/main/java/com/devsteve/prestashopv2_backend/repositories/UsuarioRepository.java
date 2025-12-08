@@ -15,6 +15,7 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
            "LEFT JOIN FETCH u.roles " +
            "LEFT JOIN FETCH u.empleadoTiendas et " +
            "LEFT JOIN FETCH et.tienda " +
+           "LEFT JOIN FETCH u.cuentasCliente cc " +
            "WHERE u.email = :email AND u.activo = true")
     Optional<UsuarioEntity> findByEmailWithRolesAndTiendas(@Param("email") String email);
 
@@ -22,6 +23,8 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
            "LEFT JOIN FETCH u.roles " +
            "LEFT JOIN FETCH u.empleadoTiendas et " +
            "LEFT JOIN FETCH et.tienda " +
+           "LEFT JOIN FETCH u.cuentasCliente cc " +
+           "LEFT JOIN FETCH cc.tienda " +
            "WHERE u.id = :id")
     Optional<UsuarioEntity> findByIdWithRolesAndTiendas(@Param("id") Long id);
 

@@ -9,8 +9,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "ventas")
@@ -63,5 +63,5 @@ public class VentaEntity {
 
     @OneToMany(mappedBy = "venta", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private Set<DetalleVentaEntity> detalles = new HashSet<>();
+    private List<DetalleVentaEntity> detalleVentas = new ArrayList<>();
 }

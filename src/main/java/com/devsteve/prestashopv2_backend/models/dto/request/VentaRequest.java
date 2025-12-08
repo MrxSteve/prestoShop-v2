@@ -29,5 +29,5 @@ public class VentaRequest {
 
     @NotEmpty(message = "Debe incluir al menos un producto en la venta")
     @Valid
-    private List<DetalleVentaRequest> detalles;
+    private List<DetalleVentaRequest> detalleVentas;
 }

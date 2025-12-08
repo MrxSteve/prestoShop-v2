@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface VentaRepository extends JpaRepository<VentaEntity, Long> {
 
@@ -46,4 +47,28 @@ public interface VentaRepository extends JpaRepository<VentaEntity, Long> {
     List<VentaEntity> findByTiendaIdAndEstadoOrderByFechaVentaDesc(
         @Param("tiendaId") Long tiendaId,
         @Param("estado") EstadoVenta estado);
+
+    @Query("SELECT v FROM VentaEntity v " +
+           "LEFT JOIN FETCH v.detalleVentas d " +
+           "LEFT JOIN FETCH d.producto " +
+           "LEFT JOIN FETCH v.tienda " +
+           "LEFT JOIN FETCH v.cuentaCliente cc " +
+           "LEFT JOIN FETCH cc.usuario " +
+           "WHERE v.id = :id")
+    Optional<VentaEntity> findByIdWithDetalles(@Param("id") Long id);
+
+    // Métodos para consultar ventas de clientes
+    List<VentaEntity> findByCuentaClienteUsuarioIdOrderByFechaVentaDesc(@Param("usuarioId") Long usuarioId);
+
+    List<VentaEntity> findByCuentaClienteUsuarioIdAndEstadoOrderByFechaVentaDesc(
+        @Param("usuarioId") Long usuarioId,
+        @Param("estado") EstadoVenta estado);
+
+    List<VentaEntity> findByCuentaClienteUsuarioIdAndTiendaIdOrderByFechaVentaDesc(
+        @Param("usuarioId") Long usuarioId,
+        @Param("tiendaId") Long tiendaId);
+
+    List<VentaEntity> findByCuentaClienteUsuarioIdAndEstadoInOrderByFechaVentaDesc(
+        @Param("usuarioId") Long usuarioId,
+        @Param("estados") List<EstadoVenta> estados);
 }

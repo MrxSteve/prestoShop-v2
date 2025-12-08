@@ -52,7 +52,7 @@ public class VentaEmailService {
             }
 
             // Preparar detalles de la venta
-            variables.put("detalles", venta.getDetalles());
+            variables.put("detalles", venta.getDetalleVentas());
             variables.put("currencyFormat", currencyFormat);
 
             // Determinar asunto según el tipo de venta

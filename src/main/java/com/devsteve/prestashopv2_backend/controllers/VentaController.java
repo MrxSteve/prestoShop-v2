@@ -66,4 +66,20 @@ public class VentaController {
         VentaResponse venta = ventaService.cancelarVenta(ventaId);
         return ResponseEntity.ok(venta);
     }
+
+    @Operation(summary = "Marcar venta como pagada", description = "Solo encargados y empleados pueden marcar ventas como pagadas")
+    @PutMapping("/{ventaId}/marcar-pagada")
+    @PreAuthorize("hasRole('ENCARGADO') or hasRole('EMPLEADO')")
+    public ResponseEntity<VentaResponse> marcarComoPagada(@PathVariable Long ventaId) {
+        VentaResponse venta = ventaService.marcarComoPagada(ventaId);
+        return ResponseEntity.ok(venta);
+    }
+
+    @Operation(summary = "Marcar todas las ventas de un cliente como pagadas", description = "Solo encargados y empleados pueden marcar ventas masivas como pagadas")
+    @PutMapping("/cliente/{clienteId}/marcar-todas-pagadas")
+    @PreAuthorize("hasRole('ENCARGADO') or hasRole('EMPLEADO')")
+    public ResponseEntity<List<VentaResponse>> marcarTodasVentasClienteComoPagadas(@PathVariable Long clienteId) {
+        List<VentaResponse> ventas = ventaService.marcarTodasVentasClienteComoPagadas(clienteId);
+        return ResponseEntity.ok(ventas);
+    }
 }

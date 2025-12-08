@@ -20,7 +20,7 @@ public interface VentaMapper {
     @Mapping(target = "cliente.nombreCompleto", source = "cuentaCliente.usuario.nombreCompleto")
     @Mapping(target = "cliente.email", source = "cuentaCliente.usuario.email")
     @Mapping(target = "cliente.telefono", source = "cuentaCliente.usuario.telefono")
-    @Mapping(target = "detalles", source = "detalles")
+    @Mapping(target = "detalles", source = "detalleVentas")
     VentaResponse toResponse(VentaEntity entity);
 
     @Mapping(target = "id", ignore = true)
@@ -32,7 +32,7 @@ public interface VentaMapper {
     @Mapping(target = "estado", ignore = true) // Se establece según el tipo de venta
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "detalles", ignore = true) // Se procesan por separado
+    @Mapping(target = "detalleVentas", ignore = true)
     VentaEntity toEntity(VentaRequest request);
 
     List<VentaResponse> toResponseList(List<VentaEntity> entities);
