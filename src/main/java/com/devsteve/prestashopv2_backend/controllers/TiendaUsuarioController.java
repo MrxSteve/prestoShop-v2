@@ -95,11 +95,13 @@ public class TiendaUsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/clientes/{id}")
-    @Operation(summary = "Desactivar cliente", description = "Desactivar un cliente")
+    @PutMapping("/{tiendaId}/clientes/{usuarioId}/desactivar")
+    @Operation(summary = "Desactivar cliente en tienda", description = "Desactivar un cliente específico en una tienda")
     @PreAuthorize("hasRole('ENCARGADO')")
-    public ResponseEntity<Void> desactivarCliente(@PathVariable Long id) {
-        usuarioService.desactivarUsuario(id);
+    public ResponseEntity<Void> desactivarClienteEnTienda(
+            @PathVariable Long tiendaId,
+            @PathVariable Long usuarioId) {
+        usuarioService.desactivarClienteEnTienda(usuarioId, tiendaId);
         return ResponseEntity.noContent().build();
     }
 

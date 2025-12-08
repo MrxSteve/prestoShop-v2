@@ -215,6 +215,26 @@ public class UsuarioService {
     }
 
     @Transactional
+    public void desactivarClienteEnTienda(Long usuarioId, Long tiendaId) {
+        // Validar acceso a la tienda
+        String emailSolicitante = SecurityContextHolder.getContext().getAuthentication().getName();
+        UsuarioEntity solicitante = usuarioRepository.findByEmailWithRolesAndTiendas(emailSolicitante)
+            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+        validarAccesoATienda(solicitante, tiendaId);
+
+        // Encontrar la cuenta cliente
+        CuentaClienteEntity cuentaCliente = cuentaClienteRepository
+            .findByUsuarioIdAndTiendaId(usuarioId, tiendaId)
+            .orElseThrow(() -> new RuntimeException("Cliente no encontrado en esta tienda"));
+
+        cuentaCliente.setActiva(false);
+        cuentaClienteRepository.save(cuentaCliente);
+
+        log.info("Cliente desactivado en tienda: usuarioId={}, tiendaId={}", usuarioId, tiendaId);
+    }
+
+    @Transactional
     public void desactivarUsuario(Long usuarioId) {
         UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));

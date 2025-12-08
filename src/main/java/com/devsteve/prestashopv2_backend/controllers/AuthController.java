@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,14 +32,6 @@ public class AuthController {
     @Operation(summary = "Iniciar sesión", description = "Autenticar usuario y obtener token JWT")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
-
-    @PostMapping("/registro")
-    @Operation(summary = "Registrar usuario", description = "Registrar nuevo empleado o cliente (requiere estar autenticado)")
-    @PreAuthorize("hasRole('SYSADMIN') or hasRole('ENCARGADO')")
-    public ResponseEntity<AuthResponse> registrarUsuario(@Valid @RequestBody RegistroUsuarioRequest request) {
-        AuthResponse response = authService.registrarUsuario(request);
         return ResponseEntity.ok(response);
     }
 
