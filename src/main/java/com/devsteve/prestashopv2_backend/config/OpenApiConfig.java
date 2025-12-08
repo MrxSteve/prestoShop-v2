@@ -28,7 +28,7 @@ public class OpenApiConfig {
                         .version("v1.0.0"))
                 .servers(List.of(
                         new Server()
-                                .url("https://ushopmoney.duckdns.org")
+                                .url("http://158.69.113.82:8090")
                                 .description("Servidor de Producción"),
                         new Server()
                                 .url("http://localhost:" + serverPort)
