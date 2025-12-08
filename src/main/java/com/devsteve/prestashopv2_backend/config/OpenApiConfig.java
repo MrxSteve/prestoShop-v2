@@ -28,7 +28,7 @@ public class OpenApiConfig {
                         .version("v1.0.0"))
                 .servers(List.of(
                         new Server()
-                                .url("https://falta-dns.com")
+                                .url("https://ushopmoney.duckdns.org")
                                 .description("Servidor de Producción"),
                         new Server()
                                 .url("http://localhost:" + serverPort)
