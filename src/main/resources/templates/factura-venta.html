@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura de Venta</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .invoice-title {
+            color: #007bff;
+            margin: 0;
+            font-size: 24px;
+        }
+        .invoice-number {
+            color: #666;
+            margin: 5px 0;
+        }
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .info-block {
+            flex: 1;
+        }
+        .info-block h3 {
+            color: #333;
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .details-table th,
+        .details-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .details-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .details-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .totals {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .totals .total-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .totals .final-total {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+            border-top: 2px solid #007bff;
+            padding-top: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-pendiente {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .status-pagada {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-cancelada {
+            background-color: #dc3545;
+            color: white;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .observations {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .observations h4 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="invoice-title">FACTURA DE VENTA</h1>
+            <p class="invoice-number">Factura #<span th:text="${numeroVenta}"></span></p>
+            <p>Fecha: <span th:text="${fechaVenta}"></span></p>
+        </div>
+
+        <div class="info-section">
+            <div class="info-block">
+                <h3>Tienda</h3>
+                <p><strong th:text="${nombreTienda}"></strong></p>
+                <p th:if="${telefonoTienda}">Teléfono: <span th:text="${telefonoTienda}"></span></p>
+            </div>
+            <div class="info-block">
+                <h3>Cliente</h3>
+                <p><strong th:text="${nombreCliente}"></strong></p>
+                <p>Tipo de Venta:
+                    <span th:if="${tipoVenta == 'CREDITO'}" class="status-badge status-pendiente">A Crédito</span>
+                    <span th:if="${tipoVenta == 'CONTADO'}" class="status-badge status-pagada">Al Contado</span>
+                </p>
+                <p>Estado:
+                    <span th:if="${estado == 'PENDIENTE'}" class="status-badge status-pendiente">Pendiente</span>
+                    <span th:if="${estado == 'PAGADA'}" class="status-badge status-pagada">Pagada</span>
+                    <span th:if="${estado == 'CANCELADA'}" class="status-badge status-cancelada">Cancelada</span>
+                </p>
+            </div>
+        </div>
+
+        <table class="details-table">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Unit.</th>
+                    <th>Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="detalle : ${detalles}">
+                    <td>
+                        <strong th:text="${detalle.producto.nombre}"></strong>
+                        <br><small th:text="${detalle.producto.descripcion}" th:if="${detalle.producto.descripcion}"></small>
+                    </td>
+                    <td th:text="${detalle.cantidad}"></td>
+                    <td th:text="${#numbers.formatCurrency(detalle.precioUnitario)}"></td>
+                    <td th:text="${#numbers.formatCurrency(detalle.subtotal)}"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <div class="total-line">
+                <strong>Subtotal: <span th:text="${subtotal}"></span></strong>
+            </div>
+            <div class="total-line final-total">
+                <strong>TOTAL: <span th:text="${total}"></span></strong>
+            </div>
+        </div>
+
+        <div class="observations" th:if="${observaciones}">
+            <h4>Observaciones:</h4>
+            <p th:text="${observaciones}"></p>
+        </div>
+
+        <div class="footer">
+            <p><strong>¡Gracias por su compra!</strong></p>
+            <p th:if="${tipoVenta == 'CREDITO'}">Esta compra ha sido registrada en su cuenta de crédito.</p>
+            <p>Para cualquier consulta, puede contactarnos.</p>
+        </div>
+    </div>
+</body>
+</html>
