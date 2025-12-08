@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprobante de Abono</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .abono-info {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 4px solid #667eea;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #495057;
+            flex: 1;
+        }
+        .info-value {
+            color: #212529;
+            flex: 1;
+            text-align: right;
+        }
+        .monto-destacado {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .monto-destacado h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .estado-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .estado-aplicado {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .estado-pendiente {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .estado-rechazado {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .observaciones {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .observaciones h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+            font-size: 16px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+            .info-row {
+                flex-direction: column;
+            }
+            .info-value {
+                text-align: left;
+                margin-top: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Comprobante de Abono</h1>
+            <p th:text="|Abono #${abono.id} - ${tienda.nombre}|">Abono #123 - Tienda ABC</p>
+        </div>
+
+        <div class="content">
+            <div class="monto-destacado">
+                <h2 th:text="${montoFormateado}">$150.00</h2>
+                <p>Monto del Abono</p>
+            </div>
+
+            <div class="abono-info">
+                <div class="info-row">
+                    <span class="info-label">Cliente:</span>
+                    <span class="info-value" th:text="${cliente.nombreCompleto}">Juan Pérez</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value" th:text="${cliente.email}">juan@email.com</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tienda:</span>
+                    <span class="info-value" th:text="${tienda.nombre}">Tienda ABC</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Fecha del Abono:</span>
+                    <span class="info-value" th:text="${fechaFormateada}">08/12/2024 10:30</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Método de Pago:</span>
+                    <span class="info-value" th:text="${metodoPagoTexto}">Efectivo</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value">
+                        <span th:class="|estado-badge estado-${#strings.toLowerCase(abono.estado)}|"
+                              th:text="${estadoTexto}">Aplicado</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="observaciones" th:if="${abono.observaciones != null and !#strings.isEmpty(abono.observaciones)}">
+                <h3>Observaciones</h3>
+                <p th:text="${abono.observaciones}">Observaciones del abono</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 8px;">
+                <p style="margin: 0; color: #28a745; font-weight: bold; font-size: 16px;">
+                    ¡Gracias por su pago!
+                </p>
+                <p style="margin: 10px 0 0 0; color: #6c757d; font-size: 14px;">
+                    Este comprobante confirma que su abono ha sido procesado correctamente.
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong th:text="${tienda.nombre}">Tienda ABC</strong></p>
+            <p th:if="${tienda.direccionExacta}" th:text="${tienda.direccionExacta}">Dirección de la tienda</p>
+            <p th:if="${tienda.telefono}" th:text="|Teléfono: ${tienda.telefono}|">Teléfono: +503 1234-5678</p>
+            <p style="margin-top: 15px; font-size: 12px;">
+                Este es un comprobante automático. Conserve este documento para sus registros.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
