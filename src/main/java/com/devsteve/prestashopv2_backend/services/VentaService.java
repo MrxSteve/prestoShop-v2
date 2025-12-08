@@ -5,6 +5,7 @@ import com.devsteve.prestashopv2_backend.models.dto.request.VentaRequest;
 import com.devsteve.prestashopv2_backend.models.dto.response.VentaResponse;
 import com.devsteve.prestashopv2_backend.models.entities.*;
 import com.devsteve.prestashopv2_backend.models.enums.EstadoVenta;
+import com.devsteve.prestashopv2_backend.models.enums.TipoEvento;
 import com.devsteve.prestashopv2_backend.models.enums.TipoVenta;
 import com.devsteve.prestashopv2_backend.repositories.*;
 import com.devsteve.prestashopv2_backend.services.email.VentaEmailService;
@@ -39,6 +40,7 @@ public class VentaService {
     private final VentaMapper ventaMapper;
     private final DetalleVentaMapper detalleVentaMapper;
     private final VentaEmailService ventaEmailService;
+    private final MovimientoTiendaService movimientoTiendaService;
 
     @Transactional
     public VentaResponse crear(VentaRequest request) {
@@ -92,6 +94,16 @@ public class VentaService {
         // Procesar detalles de venta
         procesarDetallesVenta(ventaGuardada, request.getDetalleVentas());
 
+        // REGISTRAR MOVIMIENTO AUTOMÁTICAMENTE
+        movimientoTiendaService.registrarEvento(
+                TipoEvento.VENTA_REGISTRADA,
+                "Venta registrada - " + venta.getTipoVenta() + " por $" + venta.getTotal(),
+                venta.getTotal(),
+                cuenta != null ? cuenta.getUsuario().getId() : null,
+                ventaGuardada.getId(),
+                "ventas"
+        );
+
         // FACTURA POR CORREO (VENTA A CRÉDITO)
         ventaEmailService.enviarFacturaVenta(ventaGuardada);
 
@@ -128,6 +140,16 @@ public class VentaService {
 
         // Procesar detalles de venta
         procesarDetallesVenta(ventaGuardada, request.getDetalleVentas());
+
+        // REGISTRAR MOVIMIENTO AUTOMÁTICAMENTE
+        movimientoTiendaService.registrarEvento(
+                TipoEvento.VENTA_REGISTRADA,
+                "Venta registrada - " + venta.getTipoVenta() + " por $" + venta.getTotal(),
+                venta.getTotal(),
+                cuenta != null ? cuenta.getUsuario().getId() : null,
+                ventaGuardada.getId(),
+                "ventas"
+        );
 
         // FACTURA POR CORREO (VENTA DE CONTADO - SOLO SI TIENE CUENTA)
         if (cuenta != null) { // Solo enviar correo si el cliente tiene cuenta registrada
@@ -248,6 +270,12 @@ public class VentaService {
 
         // Guardar la venta actualizada con los detalles
         ventaRepository.save(venta);
+
+        // Si es venta a crédito, cargar el saldo a la cuenta
+        if (venta.getTipoVenta() == TipoVenta.CREDITO && venta.getCuentaCliente() != null) {
+            cuentaClienteService.cargarSaldo(venta.getCuentaCliente().getId(),
+                    venta.getTotal(), "Compra venta #" + venta.getId());
+        }
     }
 
     private BigDecimal calcularTotalVenta(List<DetalleVentaRequest> detallesRequest, Long tiendaId) {

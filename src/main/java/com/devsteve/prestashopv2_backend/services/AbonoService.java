@@ -4,6 +4,7 @@ import com.devsteve.prestashopv2_backend.models.dto.request.AbonoRequest;
 import com.devsteve.prestashopv2_backend.models.dto.response.AbonoResponse;
 import com.devsteve.prestashopv2_backend.models.entities.*;
 import com.devsteve.prestashopv2_backend.models.enums.EstadoAbono;
+import com.devsteve.prestashopv2_backend.models.enums.TipoEvento;
 import com.devsteve.prestashopv2_backend.repositories.*;
 import com.devsteve.prestashopv2_backend.services.email.AbonoEmailService;
 import com.devsteve.prestashopv2_backend.utils.mappers.AbonoMapper;
@@ -28,6 +29,7 @@ public class AbonoService {
     private final CuentaClienteService cuentaClienteService;
     private final AbonoMapper abonoMapper;
     private final AbonoEmailService abonoEmailService;
+    private final MovimientoTiendaService movimientoTiendaService;
 
     @Transactional
     public AbonoResponse crear(AbonoRequest request) {
@@ -63,6 +65,16 @@ public class AbonoService {
             // Enviar comprobante por correo
             abonoEmailService.enviarComprobanteAbono(abonoGuardado);
         }
+
+        // REGISTRAR MOVIMIENTO AUTOMÁTICAMENTE
+        movimientoTiendaService.registrarEvento(
+                TipoEvento.ABONO_REGISTRADO,
+                "Abono registrado - " + abono.getMetodoPago() + " por $" + abono.getMonto(),
+                abono.getMonto(),
+                cuentaCliente.getUsuario().getId(),
+                abonoGuardado.getId(),
+                "abonos"
+        );
 
         log.info("Abono #{} creado por {} para cliente {} por monto ${}",
                 abonoGuardado.getId(), emailSolicitante, cuentaCliente.getUsuario().getEmail(), abono.getMonto());
